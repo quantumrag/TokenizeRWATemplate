@@ -35,10 +35,7 @@ function isAllowedOrigin(origin) {
 
   try {
     const host = new URL(origin).hostname
-    return (
-      host.endsWith('.vercel.app') ||
-      host.endsWith('.app.github.dev')
-    )
+    return host.endsWith('.vercel.app') || host.endsWith('.app.github.dev')
   } catch {
     return false
   }
@@ -98,6 +95,27 @@ app.get('/api/debug', (req, res) => {
     url: req.url,
     origin: req.headers.origin || null,
   })
+})
+
+// Liveness check route (another common convention)
+app.get('/live', (req, res) => {
+  // A more detailed check can be added here, e.g., database connectivity
+  const healthcheck = {
+    uptime: process.uptime(),
+    message: 'OK',
+    timestamp: Date.now(),
+  }
+  try {
+    res.status(200).json(healthcheck)
+  } catch (error) {
+    healthcheck.message = error.message
+    res.status(503).json(healthcheck)
+  }
+})
+
+// Redirect the default route '/' to '/home'
+app.get('/', (req, res) => {
+  res.redirect('/live')
 })
 
 function safeTrim(v) {
